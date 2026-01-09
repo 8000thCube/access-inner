@@ -3,7 +3,7 @@ impl<T:?Sized> Unified for T{}
 pub mod access;
 /// wrappers for controlling where access or unwrapping stops
 pub mod wrap;
-/// provided internal data access and wrapping functions, unified into one trait for convenience on import and generic specification
+/// provided internal data access and wrapping functions, unified into one trait for convenience on import and calls on generic trait funtions
 pub trait Unified{
 	/// gets the inner value
 	fn get<T>(&self)->T where Self:GetInner<T>{self.get_inner()}

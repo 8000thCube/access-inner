@@ -1,6 +1,12 @@
 impl<T:GetInner<U>,U> GetInner<Option<U>> for Option<T>{
 	fn get_inner(&self)->Option<U>{self.as_ref().map(T::get_inner)}
 }
+impl<T:GetInner<U>,U> GetInner<U> for Arc<T>{
+	fn get_inner(&self)->U{(**self).get_inner()}
+}
+impl<T:Inner<U>,U> Inner<U> for Arc<T>{
+	fn inner(&self)->&U{(**self).inner()}
+}
 impl<T:InnerRef<U>,U> InnerRef<Option<U>> for Option<T>{
 	fn inner_ref(&self)->Self::Ref<'_>{
 		match self{
@@ -9,6 +15,15 @@ impl<T:InnerRef<U>,U> InnerRef<Option<U>> for Option<T>{
 		}
 	}
 	type Ref<'a>=Option<T::Ref<'a>> where T:'a,U:'a;
+}
+impl<T:InnerRefMut<U>,U> InnerRefMut<Option<U>> for Arc<T>{
+	fn inner_ref_mut(&mut self)->Self::RefMut<'_>{
+		match Arc::get_mut(self){
+			None=>None,
+			Some(t)=>Some(t.inner_ref_mut())
+		}
+	}
+	type RefMut<'a>=Option<T::RefMut<'a>> where T:'a,U:'a;
 }
 impl<T:InnerRefMut<U>,U> InnerRefMut<Option<U>> for Option<T>{
 	fn inner_ref_mut(&mut self)->Self::RefMut<'_>{
@@ -64,3 +79,4 @@ pub trait UnwrapInner<T>{
 	/// unwraps the inner value
 	fn unwrap_inner(self)->T;
 }
+use std::sync::Arc;
