@@ -1,5 +1,5 @@
 direct_ref!(@inner WrappedInner<T> where T:?Sized);
-direct_ref!(@mut WrappedInner<T> where T:?Sized);
+direct_ref!(@mut WrappedInner<T> where T:?Sized);// TODO through ref
 
 #[macro_export]
 /// creates a transparent wrapper and implements some important traits for it TODO allow multiple types and where bounds, make the multi call thing work
@@ -61,7 +61,7 @@ macro_rules! generic_wrapper{
 	);
 	(@get $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
 		impl<$param:GetInner<T307EC305B4556985>,T307EC305B4556985> GetInner<T307EC305B4556985> for $name<$param>$(where $($bound)*)?{
-			fn get_inner(&self)->$param{self.$field.get_inner()}
+			fn get_inner(&self)->T307EC305B4556985{self.$field.get_inner()}
 		}
 	);
 	(@inner-stop $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
@@ -87,12 +87,12 @@ macro_rules! generic_wrapper{
 	(unsafe @from-ref $name:ident<$param:ident>$(where $($bound:tt)*)?)=>(
 		impl<$param> From<&$param> for &$name<$param>$(where $($bound)*)?{
 			fn from(value:&$param)->Self{
-				unsafe{mem::transmute(value)}		// transparent repr cast
+				unsafe{core::mem::transmute(value)}		// transparent repr cast
 			}
 		}
 		impl<$param> From<&mut T> for &mut $name<$param>$(where $($bound)*)?{
 			fn from(value:&mut $param)->Self{
-				unsafe{mem::transmute(value)}		// transparent repr cast
+				unsafe{core::mem::transmute(value)}		// transparent repr cast
 			}
 		}
 	);
@@ -103,7 +103,7 @@ macro_rules! generic_wrapper{
 	);
 	(@unwrap $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
 		impl<$param:UnwrapInner<T307EC305B4556985>> UnwrapInner<T307EC305B4556985> for $name<$param>$(where $($bound)*)?{
-			fn unwrap_inner(self)->$param{self.$field.unwrap_inner()}
+			fn unwrap_inner(self)->T307EC305B4556985{self.$field.unwrap_inner()}
 		}
 	);
 }
@@ -120,5 +120,4 @@ pub use generic_wrapper;
 self_inner!(@get WrappedInner<T>);
 self_inner!(@inner WrappedInner<T> where T:?Sized);
 self_inner!(@mut WrappedInner<T> where T:?Sized);
-use core::mem;
 use crate::access::*;
