@@ -102,7 +102,7 @@ macro_rules! generic_wrapper{
 		}
 	);
 	(@unwrap $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
-		impl<$param:UnwrapInner<T307EC305B4556985>> UnwrapInner<T307EC305B4556985> for $name<$param>$(where $($bound)*)?{
+		impl<$param:UnwrapInner<T307EC305B4556985>,T307EC305B4556985> UnwrapInner<T307EC305B4556985> for $name<$param>$(where $($bound)*)?{
 			fn unwrap_inner(self)->T307EC305B4556985{self.$field.unwrap_inner()}
 		}
 	);
