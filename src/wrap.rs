@@ -3,20 +3,35 @@ direct_ref!(@mut WrappedInner<T> where T:?Sized);
 
 #[macro_export]
 /// creates a transparent wrapper and implements some important traits for it TODO allow multiple types and where bounds, make the multi call thing work
-/// generic_transparent_wrapper!(@declare "comment" pub(somewhere) Wrapper<T>) declares the struct and derives builtin rust traits #[derive(Clone,Copy,Debug,Default,Eq,Hash,Ord,PartialEq,PartialOrd)], applies #[repr(transparent)], and documents with the comment
-/// generic_transparent_wrapper!(unsafe @from-ref Wrapper<T>) implements from &T for &Wrapper<T> and from &mut T for &mut Wrapper<T>. for safety, Wrapper<T> must be a transparent repr of T
+/// generic_wrapper!(@declare "comment" pub(somewhere) Wrapper<T>) declares the struct and derives builtin rust traits #[derive(Clone,Copy,Debug,Default,Eq,Hash,Ord,PartialEq,PartialOrd)], applies #[repr(transparent)], and documents with the comment
+/// generic_wrapper!(unsafe @from-ref Wrapper<T>) implements from &T for &Wrapper<T> and from &mut T for &mut Wrapper<T>. for safety, Wrapper<T> must be a transparent repr of T
 /// TODO document other branches
 /// example usage: creating WrappedInner
 
-/// generic_transparent_wrapper!(@declare "wrapper to make unwrap_inner and other access functions that might just call versions of themselves on the inner value stop here" pub WrappedInner<T> where T:?Sized);
-/// generic_transparent_wrapper!(@from WrappedInner<T>);
-/// generic_transparent_wrapper!(@get WrappedInner<T>.0);
-/// generic_transparent_wrapper!(@inner WrappedInner<T>.0 where T:?Sized);
-/// generic_transparent_wrapper!(@mut WrappedInner<T>.0 where T:?Sized);
-/// generic_transparent_wrapper!(@unwrap WrappedInner<T>.0 where T:?Sized);
-/// generic_transparent_wrapper!(unsafe @from-ref WrappedInner<T> where T:?Sized);
+/// direct_ref!(@inner WrappedInner<T> where T:?Sized);
+/// direct_ref!(@mut WrappedInner<T> where T:?Sized);
+/// generic_wrapper!(@declare "wrapper to make unwrap_inner and other access functions that might just call versions of themselves on the inner value stop here" pub WrappedInner<T> where T:?Sized);
+/// generic_wrapper!(@from WrappedInner<T>);
+/// generic_wrapper!(@get-stop WrappedInner<T>.0);
+/// generic_wrapper!(@inner-stop WrappedInner<T>.0 where T:?Sized);
+/// generic_wrapper!(@mut-stop WrappedInner<T>.0 where T:?Sized);
+/// generic_wrapper!(@unwrap-stop WrappedInner<T>.0 where T:?Sized);
+/// generic_wrapper!(unsafe @from-ref WrappedInner<T> where T:?Sized);
+/// self_inner!(@get WrappedInner<T>);
+/// self_inner!(@inner WrappedInner<T> where T:?Sized);
+/// self_inner!(@mut WrappedInner<T> where T:?Sized);
 
-macro_rules! generic_transparent_wrapper{
+macro_rules! generic_wrapper{
+	(@as-mut $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
+		impl<$param> AsMut<$param> for $name<$param>$(where $($bound)*)?{
+			fn as_mut(&mut self)->&mut $param{&mut self.$field}
+		}
+	);
+	(@as-ref $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
+		impl<$param> AsRef<$param> for $name<$param>$(where $($bound)*)?{
+			fn as_ref(&self)->&$param{&self.$field}
+		}
+	);
 	(@declare $($comment:literal)? $v:vis $name:ident<$param:ident>$(where $($bound:tt)*)?)=>(
 		#[derive(Clone,Copy,Debug,Default,Eq,Hash,Ord,PartialEq,PartialOrd)]
 		$(#[doc=$comment])?
@@ -39,19 +54,34 @@ macro_rules! generic_transparent_wrapper{
 			fn from(value:$param)->Self{Self(value)}
 		}
 	);
-	(@get $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
+	(@get-stop $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
 		impl<$param:Clone> GetInner<$param> for $name<$param>$(where $($bound)*)?{
 			fn get_inner(&self)->$param{self.$field.clone()}
 		}
 	);
-	(@inner $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
-		impl<$param:Clone> Inner<$param> for $name<$param>$(where $($bound)*)?{
+	(@get $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
+		impl<$param:GetInner<T307EC305B4556985>,T307EC305B4556985> GetInner<T307EC305B4556985> for $name<$param>$(where $($bound)*)?{
+			fn get_inner(&self)->$param{self.$field.get_inner()}
+		}
+	);
+	(@inner-stop $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
+		impl<$param> Inner<$param> for $name<$param>$(where $($bound)*)?{
 			fn inner(&self)->&$param{&self.$field}
 		}
 	);
-	(@mut $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
-		impl<$param:Clone> InnerMut<$param> for $name<$param>$(where $($bound)*)?{
+	(@inner $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
+		impl<$param:Inner<T307EC305B4556985>,T307EC305B4556985> Inner<T307EC305B4556985> for $name<$param>$(where $($bound)*)?{
+			fn inner(&self)->&T307EC305B4556985{self.$field.inner()}
+		}
+	);
+	(@mut-stop $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
+		impl<$param> InnerMut<$param> for $name<$param>$(where $($bound)*)?{
 			fn inner_mut(&mut self)->&mut $param{&mut self.$field}
+		}
+	);
+	(@mut $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
+		impl<$param:InnerMut<T307EC305B4556985>,T307EC305B4556985> InnerMut<T307EC305B4556985> for $name<$param>$(where $($bound)*)?{
+			fn inner_mut(&mut self)->&mut T307EC305B4556985{self.$field.inner_mut()}
 		}
 	);
 	(unsafe @from-ref $name:ident<$param:ident>$(where $($bound:tt)*)?)=>(
@@ -66,20 +96,27 @@ macro_rules! generic_transparent_wrapper{
 			}
 		}
 	);
-	(@unwrap $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
+	(@unwrap-stop $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
 		impl<$param:Sized> UnwrapInner<$param> for $name<$param>$(where $($bound)*)?{
 			fn unwrap_inner(self)->$param{self.$field}
 		}
 	);
+	(@unwrap $($comment:literal)? $v:vis $name:ident<$param:ident>.$field:tt$(where $($bound:tt)*)?)=>(
+		impl<$param:UnwrapInner<T307EC305B4556985>> UnwrapInner<T307EC305B4556985> for $name<$param>$(where $($bound)*)?{
+			fn unwrap_inner(self)->$param{self.$field.unwrap_inner()}
+		}
+	);
 }
-generic_transparent_wrapper!(@declare "wrapper to make unwrap_inner and other access functions that might just call versions of themselves on the inner value stop here" pub WrappedInner<T> where T:?Sized);
-generic_transparent_wrapper!(@from WrappedInner<T> where T:?Sized);
-generic_transparent_wrapper!(@get WrappedInner<T>.0);
-generic_transparent_wrapper!(@inner WrappedInner<T>.0 where T:?Sized);
-generic_transparent_wrapper!(@mut WrappedInner<T>.0 where T:?Sized);
-generic_transparent_wrapper!(@unwrap WrappedInner<T>.0);
-generic_transparent_wrapper!(unsafe @from-ref WrappedInner<T> where T:?Sized);
-pub use generic_transparent_wrapper;
+generic_wrapper!(@declare "wrapper to make unwrap_inner and other access functions that might just call versions of themselves on the inner value stop here" pub WrappedInner<T> where T:?Sized);
+generic_wrapper!(@from WrappedInner<T> where T:?Sized);
+generic_wrapper!(@as-mut WrappedInner<T>.0 where T:?Sized);
+generic_wrapper!(@as-ref WrappedInner<T>.0 where T:?Sized);
+generic_wrapper!(@get-stop WrappedInner<T>.0);
+generic_wrapper!(@inner-stop WrappedInner<T>.0 where T:?Sized);
+generic_wrapper!(@mut-stop WrappedInner<T>.0 where T:?Sized);
+generic_wrapper!(@unwrap-stop WrappedInner<T>.0);
+generic_wrapper!(unsafe @from-ref WrappedInner<T> where T:?Sized);
+pub use generic_wrapper;
 self_inner!(@get WrappedInner<T>);
 self_inner!(@inner WrappedInner<T> where T:?Sized);
 self_inner!(@mut WrappedInner<T> where T:?Sized);

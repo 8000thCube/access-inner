@@ -18,13 +18,13 @@ pub trait Unified{
 	/// unwraps the inner value
 	fn unwrap_inner<T>(self)->T where Self:Sized+UnwrapInner<T>{UnwrapInner::unwrap_inner(self)}
 	/// wraps so that access and unwrapping operations stop here
-	fn wrap(self)->WrappedInner<Self> where Self:Sized{WrappedInner(self)}
+	fn wrap_inner(self)->WrappedInner<Self> where Self:Sized{WrappedInner(self)}
 	/// wraps so that access and unwrapping operations stop here
-	fn wrap_mut(&mut self)->&mut WrappedInner<Self>{
+	fn wrap_inner_mut(&mut self)->&mut WrappedInner<Self>{
 		unsafe{mem::transmute(self)}		// transmuting a transparent reference
 	}
 	/// wraps so that access and unwrapping operations stop here
-	fn wrap_ref(&self)->&WrappedInner<Self>{
+	fn wrap_inner_ref(&self)->&WrappedInner<Self>{
 		unsafe{mem::transmute(self)}		// transmuting a transparent reference
 	}
 }
